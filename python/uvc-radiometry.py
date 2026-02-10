@@ -48,12 +48,12 @@ def raw_to_8bit(data):
   np.right_shift(data, 8, data)
   return cv2.cvtColor(np.uint8(data), cv2.COLOR_GRAY2RGB)
 
-def display_temperature(img, val_k, loc, color):
-  val = ktof(val_k)
-  cv2.putText(img,"{0:.1f} degF".format(val), loc, cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
+def display_temperature(img, val, loc, color):
+  #val = ktof(val_k)
+  #cv2.putText(img,"{0:.1f} degF".format(val), loc, cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
   x, y = loc
-  cv2.line(img, (x - 2, y), (x + 2, y), color, 1)
-  cv2.line(img, (x, y - 2), (x, y + 2), color, 1)
+  #cv2.line(img, (x - 2, y), (x + 2, y), color, 1)
+  #cv2.line(img, (x, y - 2), (x, y + 2), color, 1)
 
 def main():
   ctx = POINTER(uvc_context)()
@@ -102,11 +102,30 @@ def main():
           data = q.get(True, 500)
           if data is None:
             break
-          data = cv2.resize(data[:,:], (640, 480))
+          
+          data = cv2.resize(data[:,:], (480,640))
+          data = ktof(data)
+          print(data)
           minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
-          img = raw_to_8bit(data)
+          max_temp = 150
+          min_temp = 50
+          data = (data - min_temp) * 255 / (max_temp - min_temp)
+          normalized_data = np.clip(data, 0, 1)  # Keep in the range [0, 1]
+
+          # Apply contrast enhancement function (exponential scaling)
+          # Increase the exponent to enhance contrast further
+          contrast_enhanced = np.clip(normalized_data ** 2, 0, 1)  # Squaring increases the contrast for higher values
+
+          # Scale back to 0-255
+          scaled_data = (contrast_enhanced * 255).astype(np.uint8)
+
+          # Convert to color image using a colormap
+          img = cv2.applyColorMap(scaled_data, cv2.COLORMAP_JET)
+          
+          #img = raw_to_8bit(data)
           display_temperature(img, minVal, minLoc, (255, 0, 0))
           display_temperature(img, maxVal, maxLoc, (0, 0, 255))
+          img = cv2.rotate(img, cv2.ROTATE_180)
           cv2.imshow('Lepton Radiometry', img)
           cv2.waitKey(1)
 

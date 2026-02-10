@@ -7,7 +7,7 @@ CV2 video capture example from Pure Thermal 1
 try:
     import cv2
 except ImportError:
-    print "ERROR python-opencv must be installed"
+    print ("ERROR python-opencv must be installed")
     exit(1)
 
 class OpenCvCapture(object):
@@ -18,14 +18,16 @@ class OpenCvCapture(object):
     def __init__(self):
         # capture from the LAST camera in the system
         # presumably, if the system has a built-in webcam it will be the first
+        '''
         for i in reversed(range(10)):
-            print "Testing for presense of camera #{0}...".format(i)
-            cv2_cap = cv2.VideoCapture(i)
+            print ("Testing for presense of camera #{0}...".format(i))
+            cv2_cap = cv2.VideoCapture(0)
             if cv2_cap.isOpened():
                 break
-
+        '''
+        cv2_cap = cv2.VideoCapture(1) 
         if not cv2_cap.isOpened():
-            print "Camera not found!"
+            print ("Camera not found!")
             exit(1)
 
         self.cv2_cap = cv2_cap
@@ -36,12 +38,12 @@ class OpenCvCapture(object):
         """
 
         cv2.namedWindow("lepton", cv2.WINDOW_NORMAL)
-        print "Running, ESC or Ctrl-c to exit..."
+        print ("Running, ESC or Ctrl-c to exit...")
         while True:
             ret, img = self.cv2_cap.read()
 
             if ret == False:
-                print "Error reading image"
+                print ("Error reading image")
                 break
 
             cv2.imshow("lepton", cv2.resize(img, (640, 480)))
