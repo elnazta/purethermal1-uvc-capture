@@ -103,26 +103,22 @@ def main():
           if data is None:
             break
           
-          data = cv2.resize(data[:,:], (480,640))
+          data = cv2.resize(data[:,:], (480, 640))
           data = ktof(data)
-          print(data)
+          
           minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
+          print(f"Temperature range - Min: {minVal:.1f}°F, Max: {maxVal:.1f}°F")
+          
+          # Define temperature range for display
           max_temp = 150
           min_temp = 50
-          data = (data - min_temp) * 255 / (max_temp - min_temp)
-          normalized_data = np.clip(data, 0, 1)  # Keep in the range [0, 1]
-
-          # Apply contrast enhancement function (exponential scaling)
-          # Increase the exponent to enhance contrast further
-          contrast_enhanced = np.clip(normalized_data ** 2, 0, 1)  # Squaring increases the contrast for higher values
-
-          # Scale back to 0-255
-          scaled_data = (contrast_enhanced * 255).astype(np.uint8)
-
-          # Convert to color image using a colormap
-          img = cv2.applyColorMap(scaled_data, cv2.COLORMAP_JET)
           
-          #img = raw_to_8bit(data)
+          # Clip data to the expected range first
+          data = np.clip(data, min_temp, max_temp)
+          
+          # Normalize to 0-255 range
+          img = ((data - min_temp) / (max_temp - min_temp) * 255).astype(np.uint8)
+          
           display_temperature(img, minVal, minLoc, (255, 0, 0))
           display_temperature(img, maxVal, maxLoc, (0, 0, 255))
           img = cv2.rotate(img, cv2.ROTATE_180)
@@ -130,6 +126,7 @@ def main():
           cv2.waitKey(1)
 
         cv2.destroyAllWindows()
+
       finally:
         libuvc.uvc_stop_streaming(devh)
 
